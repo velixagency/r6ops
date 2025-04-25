@@ -1,5 +1,5 @@
 // app/layout.tsx
-import './globals.css';
+import "../styles/globals.css";
 
 export const metadata = {
   title: 'R6Ops - Age of Origins Dashboard',

@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true,
   },
   images: {
-    domains: ["firebasestorage.googleapis.com", "your-other-domains-if-needed.com"],
+    domains: ["firebasestorage.googleapis.com"],
   },
 };
 
