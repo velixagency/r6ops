@@ -2,39 +2,28 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { auth, googleProvider, facebookProvider } from "../../lib/firebase";
-import { signInWithPopup, onAuthStateChanged } from "firebase/auth";
+import { useAuth } from "../../lib/AuthContext";
 
 export default function Login() {
   const router = useRouter();
+  const { user, loading, signInWithGoogle, signInWithFacebook } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    setIsLoading(true);
-    console.log("Checking auth state...");
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        console.log("User authenticated:", user);
-        router.push("/dashboard");
-      } else {
-        console.log("No user authenticated.");
-        setIsLoading(false);
-      }
-    });
-
-    return () => unsubscribe();
-  }, [router]);
+    if (user) {
+      console.log("User authenticated:", user);
+      router.push("/dashboard");
+    }
+  }, [user, router]);
 
   const handleGoogleSignIn = async () => {
     try {
       setIsLoading(true);
+      setError(null);
       console.log("Initiating Google sign-in with popup...");
-      const result = await signInWithPopup(auth, googleProvider);
-      if (result.user) {
-        console.log("Popup login successful:", result.user);
-        router.push("/dashboard");
-      }
+      await signInWithGoogle();
+      // After login, the useEffect above will redirect to /dashboard
     } catch (error: any) {
       console.error("Google sign-in error:", error);
       setError(`Google login failed: ${error.message}`);
@@ -45,18 +34,20 @@ export default function Login() {
   const handleFacebookSignIn = async () => {
     try {
       setIsLoading(true);
+      setError(null);
       console.log("Initiating Facebook sign-in with popup...");
-      const result = await signInWithPopup(auth, facebookProvider);
-      if (result.user) {
-        console.log("Popup login successful:", result.user);
-        router.push("/dashboard");
-      }
+      await signInWithFacebook();
+      // After login, the useEffect above will redirect to /dashboard
     } catch (error: any) {
       console.error("Facebook sign-in error:", error);
       setError(`Facebook login failed: ${error.message}`);
       setIsLoading(false);
     }
   };
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen">

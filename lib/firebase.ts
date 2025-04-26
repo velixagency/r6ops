@@ -1,4 +1,4 @@
-import { initializeApp, getApps } from "firebase/app";
+import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, FacebookAuthProvider, browserSessionPersistence } from "firebase/auth";
 
 const firebaseConfig = {
@@ -21,4 +21,4 @@ auth.setPersistence(browserSessionPersistence).catch((error) => {
 const googleProvider = new GoogleAuthProvider();
 const facebookProvider = new FacebookAuthProvider();
 
-export { auth, googleProvider, facebookProvider };
+export { app, auth, googleProvider, facebookProvider };

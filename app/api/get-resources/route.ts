@@ -18,6 +18,11 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "user_id is required" }, { status: 400 });
   }
 
+  if (typeof user_id !== "string" || user_id.length !== 28) {
+    console.error("Invalid user_id format:", user_id);
+    return NextResponse.json({ error: "Invalid user_id format: must be a 28-character string" }, { status: 400 });
+  }
+
   try {
     const { data, error } = await supabase
       .from("resources")
@@ -28,13 +33,13 @@ export async function GET(request: Request) {
       .maybeSingle();
 
     if (error) {
-      console.error("Fetch error:", JSON.stringify(error, null, 2));
-      return NextResponse.json({ error: error.message }, { status: 400 });
+      console.error("Supabase error:", JSON.stringify(error, null, 2));
+      return NextResponse.json({ error: error.message || "Failed to fetch resources from database" }, { status: 500 });
     }
 
     return NextResponse.json({ data });
   } catch (err: any) {
-    console.error("Unexpected error:", JSON.stringify(err, null, 2));
+    console.error("Unexpected error in GET /api/get-resources:", JSON.stringify(err, null, 2));
     return NextResponse.json({ error: `Unexpected error: ${err.message || "Unknown error"}` }, { status: 500 });
   }
 }
