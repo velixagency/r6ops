@@ -56,12 +56,17 @@
          });
 
          return () => unsubscribe();
+         throw new Error("Test Sentry error");
        }, [router]);
 
        const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-         const { name, value } = e.target;
-         setFormData((prev) => ({ ...prev, [name]: parseInt(value) || 0 }));
-       };
+        const { name, value } = e.target;
+        const parsedValue = parseInt(value);
+        if (isNaN(parsedValue) || parsedValue < 0) {
+          return; // Prevent negative or invalid inputs
+        }
+        setFormData((prev) => ({ ...prev, [name]: parsedValue }));
+      };
 
        const handleSubmit = async (e: React.FormEvent) => {
          e.preventDefault();

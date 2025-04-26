@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import type { Metadata } from "next";
 import "../styles/globals.css";
 import Header from "../components/Header";
@@ -16,9 +17,17 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="flex flex-col min-h-screen">
-        <Header />
-        <main className="flex-grow container mx-auto p-4">{children}</main>
-        <Footer />
+        <Sentry.ErrorBoundary
+          fallback={
+            <div className="container mx-auto p-4 text-center text-warning">
+              <p>An unexpected error occurred. Please try again later.</p>
+            </div>
+          }
+        >
+          <Header />
+          <main className="flex-grow container mx-auto p-4">{children}</main>
+          <Footer />
+        </Sentry.ErrorBoundary>
       </body>
     </html>
   );
