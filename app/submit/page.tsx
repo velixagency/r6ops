@@ -20,6 +20,7 @@
        const [loading, setLoading] = useState(true);
 
        useEffect(() => {
+        console.log("Fetching resources for user_id:", userId);
          const unsubscribe = onAuthStateChanged(auth, async (user) => {
            if (!user) {
              router.push("/login");
@@ -56,8 +57,8 @@
          });
 
          return () => unsubscribe();
-         throw new Error("Test Sentry error");
-       }, [router]);
+         throw new Error("Test Sentry client error");
+       }, [router, userId]);
 
        const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
