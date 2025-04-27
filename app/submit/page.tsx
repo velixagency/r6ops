@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../lib/AuthContext";
+import imageCompression from "browser-image-compression";
 
 export default function Submit() {
   const router = useRouter();
@@ -93,12 +94,30 @@ export default function Submit() {
     setError(null);
 
     try {
-      const formDataToSend = new FormData();
-      formDataToSend.append("screenshot", screenshot);
+      // Compress the image client-side
+      const compressedFile = await imageCompression(screenshot, {
+        maxSizeMB: 1, // Compress to 1 MB
+        maxWidthOrHeight: 1920, // Resize to max 1920px
+      });
 
+      // Convert the compressed file to base64
+      const reader = new FileReader();
+      reader.readAsDataURL(compressedFile);
+      const base64Image = await new Promise<string>((resolve, reject) => {
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+      });
+
+      // Remove the data URL prefix (e.g., "data:image/jpeg;base64,")
+      const base64Data = base64Image.split(",")[1];
+
+      // Send the base64 data as JSON to the API
       const response = await fetch("/api/extract-screenshot", {
         method: "POST",
-        body: formDataToSend,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ image: base64Data }),
       });
 
       if (!response.ok) {
@@ -107,7 +126,6 @@ export default function Submit() {
           const errorData = await response.json();
           errorMessage = errorData.error || errorMessage;
         } catch (parseErr) {
-          // If response is not JSON (e.g., HTML error page), use the status text
           errorMessage = `Failed to extract data: ${response.status} ${response.statusText}`;
         }
         throw new Error(errorMessage);
