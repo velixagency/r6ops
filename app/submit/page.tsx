@@ -235,7 +235,7 @@ export default function Submit() {
                 />
               </div>
               <div>
-                <label htmlFor="steel" className="block">Steel</label>
+                <label htmlFor="steel" className="block"> стал Steel</label>
                 <input
                   type="number"
                   id="steel"
@@ -273,6 +273,24 @@ export default function Submit() {
             </form>
           ) : (
             <div className="space-y-4">
+              <div className="bg-gray-100 p-4 rounded">
+                <h2 className="text-lg font-semibold mb-2">How to Upload a Screenshot</h2>
+                <p className="mb-2">
+                  To automatically extract your resource values, please take a screenshot of the "Resources and Speed Up Info" page in the game. Follow these steps:
+                </p>
+                <ol className="list-decimal list-inside mb-2">
+                  <li>Go to the "Bag" section in the game.</li>
+                  <li>Navigate to the "Resources" tab to view the "Resources and Speed Up Info" page.</li>
+                  <li>Take a screenshot of this page, ensuring the resource values (Food, Oil, Steel, Minerals) are visible.</li>
+                  <li>Upload the screenshot using the field below.</li>
+                </ol>
+                <p className="mb-2">Here’s an example of what the screenshot should look like:</p>
+                <img
+                  src="/images/resources-screenshot-example.png"
+                  alt="Example screenshot of Resources and Speed Up Info page"
+                  className="w-full max-w-md rounded shadow"
+                />
+              </div>
               <div>
                 <label htmlFor="screenshot" className="block">Upload Screenshot</label>
                 <input
