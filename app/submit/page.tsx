@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../lib/AuthContext";
+import Tesseract from "tesseract.js";
 
 export default function Submit() {
   const router = useRouter();
@@ -87,26 +88,63 @@ export default function Submit() {
     setError(null);
 
     try {
-      const formDataToSend = new FormData();
-      formDataToSend.append("screenshot", screenshot);
-
-      const response = await fetch("/api/extract-screenshot", {
-        method: "POST",
-        body: formDataToSend,
+      // Use Tesseract.js to process the image client-side
+      const { data: { text } } = await Tesseract.recognize(screenshot, "eng", {
+        logger: (m) => console.log(m), // Log progress
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to extract data from screenshot");
-      }
+      console.log("Extracted text:", text);
 
-      const { data } = await response.json();
+      const parseOcrText = (text: string): any => {
+        console.log("Parsing OCR text:", text);
+
+        const lines = text.split("\n");
+        let values: string[] = [];
+
+        for (const line of lines) {
+          const potentialValues = line.split(/\s+/).filter((word) => {
+            return /^[0-9,.]+[MK]?$/.test(word) || /^[0-9,]+$/.test(word);
+          });
+          if (potentialValues.length >= 6) {
+            values = potentialValues;
+            break;
+          }
+        }
+
+        if (values.length < 6) {
+          console.error("Found values:", values);
+          throw new Error("Could not find enough resource values in the screenshot. Expected 6 values in the format: [unknown, food, oil, steel, mineral, uranium]");
+        }
+
+        const parseValue = (value: string): number => {
+          value = value.replace(/,/g, "");
+          if (value.endsWith("M")) {
+            return parseFloat(value.replace("M", "")) * 1_000_000;
+          } else if (value.endsWith("K")) {
+            return parseFloat(value.replace("K", "")) * 1_000;
+          }
+          return parseInt(value) || 0;
+        };
+
+        const parsedValues = {
+          food: parseValue(values[1]),
+          oil: parseValue(values[2]),
+          steel: parseValue(values[3]),
+          mineral: parseValue(values[4]),
+          uranium: parseValue(values[5]),
+        };
+
+        console.log("Parsed resource values:", parsedValues);
+        return parsedValues;
+      };
+
+      const parsedData = parseOcrText(text);
       setFormData({
-        food: data.food || 0,
-        oil: data.oil || 0,
-        steel: data.steel || 0,
-        mineral: data.mineral || 0,
-        uranium: data.uranium || 0,
+        food: parsedData.food || 0,
+        oil: parsedData.oil || 0,
+        steel: parsedData.steel || 0,
+        mineral: parsedData.mineral || 0,
+        uranium: parsedData.uranium || 0,
       });
     } catch (err: any) {
       console.error("Extraction error:", err);
