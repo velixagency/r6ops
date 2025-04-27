@@ -14,6 +14,11 @@ export default function Submit() {
     steel: 0,
     mineral: 0,
     uranium: 0,
+    speed_up: 0, // Total speed up time in seconds
+    building_speed_up: 0, // Building speed up time in seconds
+    healing_speed_up: 0, // Healing speed up time in seconds
+    recruitment_speed_up: 0, // Recruitment speed up time in seconds
+    research_speed_up: 0, // Research speed up time in seconds
   });
   const [inputMode, setInputMode] = useState<"manual" | "screenshot">("manual");
   const [screenshot, setScreenshot] = useState<File | null>(null);
@@ -47,13 +52,19 @@ export default function Submit() {
           console.log("Raw API response:", result);
           if (result.data) {
             console.log("API response:", { data: result.data });
-            setFormData({
-              food: result.data.food || 0,
-              oil: result.data.oil || 0,
-              steel: result.data.steel || 0,
-              mineral: result.data.mineral || 0,
-              uranium: result.data.uranium || 0,
-            });
+            setFormData((prev) => ({
+              ...prev,
+              food: result.data.food || prev.food,
+              oil: result.data.oil || prev.oil,
+              steel: result.data.steel || prev.steel,
+              mineral: result.data.mineral || prev.mineral,
+              uranium: result.data.uranium || prev.uranium,
+              speed_up: result.data.speed_up || prev.speed_up,
+              building_speed_up: result.data.building_speed_up || prev.building_speed_up,
+              healing_speed_up: result.data.healing_speed_up || prev.healing_speed_up,
+              recruitment_speed_up: result.data.recruitment_speed_up || prev.recruitment_speed_up,
+              research_speed_up: result.data.research_speed_up || prev.research_speed_up,
+            }));
           } else {
             console.log("No resources found for user_id:", user.uid);
           }
@@ -82,6 +93,17 @@ export default function Submit() {
       }
       setScreenshot(file);
     }
+  };
+
+  // Helper function to format seconds into days, hours, minutes, seconds
+  const formatDuration = (totalSeconds: number): string => {
+    const days = Math.floor(totalSeconds / (24 * 60 * 60));
+    totalSeconds %= 24 * 60 * 60;
+    const hours = Math.floor(totalSeconds / (60 * 60));
+    totalSeconds %= 60 * 60;
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${days}d ${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
   };
 
   const handleExtractData = async () => {
@@ -132,13 +154,19 @@ export default function Submit() {
       }
 
       const { data } = await response.json();
-      setFormData({
-        food: data.food || 0,
-        oil: data.oil || 0,
-        steel: data.steel || 0,
-        mineral: data.mineral || 0,
-        uranium: data.uranium || 0,
-      });
+      setFormData((prev) => ({
+        ...prev,
+        food: data.food !== 0 ? data.food : prev.food,
+        oil: data.oil !== 0 ? data.oil : prev.oil,
+        steel: data.steel !== 0 ? data.steel : prev.steel,
+        mineral: data.mineral !== 0 ? data.mineral : prev.mineral,
+        uranium: data.uranium !== 0 ? data.uranium : prev.uranium,
+        speed_up: data.speed_up !== 0 ? data.speed_up : prev.speed_up,
+        building_speed_up: data.building_speed_up !== 0 ? data.building_speed_up : prev.building_speed_up,
+        healing_speed_up: data.healing_speed_up !== 0 ? data.healing_speed_up : prev.healing_speed_up,
+        recruitment_speed_up: data.recruitment_speed_up !== 0 ? data.recruitment_speed_up : prev.recruitment_speed_up,
+        research_speed_up: data.research_speed_up !== 0 ? data.research_speed_up : prev.research_speed_up,
+      }));
     } catch (err: any) {
       console.error("Extraction error:", err);
       setError(`Failed to extract data: ${err.message || "Unknown error"}`);
@@ -149,7 +177,10 @@ export default function Submit() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    if (!user || !user.uid) {
+      setError("User authentication required. Please log in again.");
+      return;
+    }
     try {
       const response = await fetch("/api/submit-resources", {
         method: "POST",
@@ -161,17 +192,23 @@ export default function Submit() {
           steel: formData.steel,
           mineral: formData.mineral,
           uranium: formData.uranium,
+          speed_up: formData.speed_up,
+          building_speed_up: formData.building_speed_up,
+          healing_speed_up: formData.healing_speed_up,
+          recruitment_speed_up: formData.recruitment_speed_up,
+          research_speed_up: formData.research_speed_up,
           troop_levels: {},
         }),
       });
       const result = await response.json();
       if (!response.ok) {
         console.error("Submit error:", result);
-        return;
+        throw new Error(result.error || `Failed to submit resources: ${response.status} ${response.statusText}`);
       }
       router.push("/dashboard");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Submit error:", error);
+      setError(`Failed to submit resources: ${error.message || "Unknown error"}`);
     }
   };
 
@@ -235,7 +272,7 @@ export default function Submit() {
                 />
               </div>
               <div>
-                <label htmlFor="steel" className="block"> стал Steel</label>
+                <label htmlFor="steel" className="block">Steel</label>
                 <input
                   type="number"
                   id="steel"
@@ -267,6 +304,66 @@ export default function Submit() {
                   className="border p-2 w-full"
                 />
               </div>
+              <div>
+                <label htmlFor="speed_up" className="block">Speed Up (seconds)</label>
+                <input
+                  type="number"
+                  id="speed_up"
+                  name="speed_up"
+                  value={formData.speed_up}
+                  onChange={handleChange}
+                  className="border p-2 w-full"
+                />
+                <p className="text-sm text-gray-600">{formatDuration(formData.speed_up)}</p>
+              </div>
+              <div>
+                <label htmlFor="building_speed_up" className="block">Building Speed Up (seconds)</label>
+                <input
+                  type="number"
+                  id="building_speed_up"
+                  name="building_speed_up"
+                  value={formData.building_speed_up}
+                  onChange={handleChange}
+                  className="border p-2 w-full"
+                />
+                <p className="text-sm text-gray-600">{formatDuration(formData.building_speed_up)}</p>
+              </div>
+              <div>
+                <label htmlFor="healing_speed_up" className="block">Healing Speed Up (seconds)</label>
+                <input
+                  type="number"
+                  id="healing_speed_up"
+                  name="healing_speed_up"
+                  value={formData.healing_speed_up}
+                  onChange={handleChange}
+                  className="border p-2 w-full"
+                />
+                <p className="text-sm text-gray-600">{formatDuration(formData.healing_speed_up)}</p>
+              </div>
+              <div>
+                <label htmlFor="recruitment_speed_up" className="block">Recruitment Speed Up (seconds)</label>
+                <input
+                  type="number"
+                  id="recruitment_speed_up"
+                  name="recruitment_speed_up"
+                  value={formData.recruitment_speed_up}
+                  onChange={handleChange}
+                  className="border p-2 w-full"
+                />
+                <p className="text-sm text-gray-600">{formatDuration(formData.recruitment_speed_up)}</p>
+              </div>
+              <div>
+                <label htmlFor="research_speed_up" className="block">Research Speed Up (seconds)</label>
+                <input
+                  type="number"
+                  id="research_speed_up"
+                  name="research_speed_up"
+                  value={formData.research_speed_up}
+                  onChange={handleChange}
+                  className="border p-2 w-full"
+                />
+                <p className="text-sm text-gray-600">{formatDuration(formData.research_speed_up)}</p>
+              </div>
               <button type="submit" className="bg-accent text-white p-2 rounded">
                 Submit
               </button>
@@ -276,20 +373,33 @@ export default function Submit() {
               <div className="bg-gray-100 p-4 rounded">
                 <h2 className="text-lg font-semibold mb-2">How to Upload a Screenshot</h2>
                 <p className="mb-2">
-                  To automatically extract your resource values, please take a screenshot of the "Resources and Speed Up Info" page in the game. Follow these steps:
+                  To automatically extract your resource and speed-up values, please take screenshots of the "Resources" and "Speed Up" tabs on the "Resources and Speed Up Info" page in the game. Follow these steps:
                 </p>
                 <ol className="list-decimal list-inside mb-2">
                   <li>Go to the "Bag" section in the game.</li>
                   <li>Navigate to the "Resources" tab to view the "Resources and Speed Up Info" page.</li>
-                  <li>Take a screenshot of this page, ensuring the resource values (Food, Oil, Steel, Minerals) are visible.</li>
-                  <li>Upload the screenshot using the field below.</li>
+                  <li>Take a screenshot of the "Resources" tab, ensuring the resource values (Food, Oil, Steel, Minerals) are visible.</li>
+                  <li>Switch to the "Speed Up" tab on the same page.</li>
+                  <li>Take a screenshot of the "Speed Up" tab, ensuring the speed-up values (Speed Up, Building Speed Up, etc.) are visible.</li>
+                  <li>Upload each screenshot separately using the field below to extract the respective data.</li>
                 </ol>
-                <p className="mb-2">Here’s an example of what the screenshot should look like:</p>
-                <img
-                  src="/images/resources-screenshot-example.png"
-                  alt="Example screenshot of Resources and Speed Up Info page"
-                  className="w-full max-w-md rounded shadow"
-                />
+                <p className="mb-2">Here are examples of what the screenshots should look like:</p>
+                <div className="mb-4">
+                  <h3 className="text-md font-medium mb-1">"Resources" Tab Screenshot</h3>
+                  <img
+                    src="/images/resources-screenshot-example.png"
+                    alt="Example screenshot of Resources tab"
+                    className="w-full max-w-md rounded shadow"
+                  />
+                </div>
+                <div>
+                  <h3 className="text-md font-medium mb-1">"Speed Up" Tab Screenshot</h3>
+                  <img
+                    src="/images/speed-up-screenshot-example.png"
+                    alt="Example screenshot of Speed Up tab"
+                    className="w-full max-w-md rounded shadow"
+                  />
+                </div>
               </div>
               <div>
                 <label htmlFor="screenshot" className="block">Upload Screenshot</label>
@@ -370,6 +480,66 @@ export default function Submit() {
                       onChange={handleChange}
                       className="border p-2 w-full"
                     />
+                  </div>
+                  <div>
+                    <label htmlFor="speed_up" className="block">Speed Up (seconds, Extracted)</label>
+                    <input
+                      type="number"
+                      id="speed_up"
+                      name="speed_up"
+                      value={formData.speed_up}
+                      onChange={handleChange}
+                      className="border p-2 w-full"
+                    />
+                    <p className="text-sm text-gray-600">{formatDuration(formData.speed_up)}</p>
+                  </div>
+                  <div>
+                    <label htmlFor="building_speed_up" className="block">Building Speed Up (seconds, Extracted)</label>
+                    <input
+                      type="number"
+                      id="building_speed_up"
+                      name="building_speed_up"
+                      value={formData.building_speed_up}
+                      onChange={handleChange}
+                      className="border p-2 w-full"
+                    />
+                    <p className="text-sm text-gray-600">{formatDuration(formData.building_speed_up)}</p>
+                  </div>
+                  <div>
+                    <label htmlFor="healing_speed_up" className="block">Healing Speed Up (seconds, Extracted)</label>
+                    <input
+                      type="number"
+                      id="healing_speed_up"
+                      name="healing_speed_up"
+                      value={formData.healing_speed_up}
+                      onChange={handleChange}
+                      className="border p-2 w-full"
+                    />
+                    <p className="text-sm text-gray-600">{formatDuration(formData.healing_speed_up)}</p>
+                  </div>
+                  <div>
+                    <label htmlFor="recruitment_speed_up" className="block">Recruitment Speed Up (seconds, Extracted)</label>
+                    <input
+                      type="number"
+                      id="recruitment_speed_up"
+                      name="recruitment_speed_up"
+                      value={formData.recruitment_speed_up}
+                      onChange={handleChange}
+                      className="border p-2 w-full"
+                    />
+                    <p className="text-sm text-gray-600">{formatDuration(formData.recruitment_speed_up)}</p>
+                  </div>
+                  <div>
+                    <label htmlFor="research_speed_up" className="block">Research Speed Up (seconds, Extracted)</label>
+                    <input
+                      type="number"
+                      id="research_speed_up"
+                      name="research_speed_up"
+                      value={formData.research_speed_up}
+                      onChange={handleChange}
+                      className="border p-2 w-full"
+                    />
+                    <p className="text-sm text-gray-600">{formatDuration(formData.research_speed_up)}</p>
                   </div>
                   <button type="submit" className="bg-accent text-white p-2 rounded">
                     Submit

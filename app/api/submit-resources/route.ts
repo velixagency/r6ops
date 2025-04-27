@@ -12,7 +12,20 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 export async function POST(request: Request) {
   try {
-    const { user_id, food, oil, steel, mineral, uranium, troop_levels } = await request.json();
+    const { 
+      user_id, 
+      food, 
+      oil, 
+      steel, 
+      mineral, 
+      uranium, 
+      speed_up, 
+      building_speed_up, 
+      healing_speed_up, 
+      recruitment_speed_up, 
+      research_speed_up, 
+      troop_levels 
+    } = await request.json();
 
     if (!user_id || typeof user_id !== "string" || user_id.length !== 28) {
       return NextResponse.json({ error: "Invalid user_id" }, { status: 400 });
@@ -25,6 +38,11 @@ export async function POST(request: Request) {
       steel: Number(steel) || 0,
       mineral: Number(mineral) || 0,
       uranium: Number(uranium) || 0,
+      speed_up: Number(speed_up) || 0,
+      building_speed_up: Number(building_speed_up) || 0,
+      healing_speed_up: Number(healing_speed_up) || 0,
+      recruitment_speed_up: Number(recruitment_speed_up) || 0,
+      research_speed_up: Number(research_speed_up) || 0,
       troop_levels: troop_levels || {},
       created_at: new Date().toISOString(),
     });
