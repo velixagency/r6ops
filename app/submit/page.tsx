@@ -21,10 +21,6 @@ export default function Submit() {
   const [fetchError, setFetchError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!user && !loading) {
-      router.push("/login");
-    }
-  
     if (user) {
       console.log("User object:", user);
       console.log("User UID:", user.uid, "Length:", user.uid.length);
@@ -36,14 +32,14 @@ export default function Submit() {
             try {
               errorData = await response.json();
             } catch (parseErr) {
-              errorData = { error: "Failed to parse error response" };
+              errorData = { error: "Failed to parse error response from API" };
             }
             console.error("API error:", {
               status: response.status,
               statusText: response.statusText,
               body: errorData,
             });
-            const errorMessage = errorData.error || `Failed to fetch resources: ${response.status} ${response.statusText}`;
+            const errorMessage = errorData.message || errorData.error || `Failed to fetch resources: ${response.status} ${response.statusText}`;
             throw new Error(errorMessage);
           }
           const result = await response.json();
@@ -67,7 +63,7 @@ export default function Submit() {
       };
       fetchResources();
     }
-  }, [user, loading, router]);
+  }, [user, loading]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -335,7 +331,7 @@ export default function Submit() {
           )}
         </>
       ) : (
-        <p>Redirecting to login...</p>
+        <p>Loading...</p>
       )}
     </div>
   );

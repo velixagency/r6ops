@@ -1,20 +1,35 @@
+"use client";
+
 import Link from "next/link";
+import { useAuth } from "../lib/AuthContext";
 
 export default function Home() {
+  const { user } = useAuth();
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen text-center">
-      <h1 className="text-5xl font-bold text-accent mb-4">
-        Track. Optimize. Dominate.
-      </h1>
-      <p className="text-xl text-muted-text mb-8">
-        Your ultimate Age of Origins resource tracker and optimizer.
-      </p>
-      <Link
-        href="/login"
-        className="bg-accent text-dark-bg px-6 py-3 rounded-lg font-semibold hover:bg-warning"
-      >
-        Get Started
-      </Link>
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold">Welcome to R6Ops</h1>
+      <p className="mb-4">Track, optimize, and dominate in Age of Origins.</p>
+      {user ? (
+        <p>
+          You’re logged in as {user.email}. Go to your{" "}
+          <Link href="/dashboard" className="text-blue-500 hover:underline">
+            Dashboard
+          </Link>{" "}
+          or{" "}
+          <Link href="/submit" className="text-blue-500 hover:underline">
+            Submit Resources
+          </Link>.
+        </p>
+      ) : (
+        <p>
+          Please{" "}
+          <Link href="/login" className="text-blue-500 hover:underline">
+            log in
+          </Link>{" "}
+          to access your dashboard and submit resources.
+        </p>
+      )}
     </div>
   );
 }

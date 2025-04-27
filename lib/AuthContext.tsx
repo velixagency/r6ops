@@ -3,7 +3,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { auth, googleProvider, facebookProvider } from "./firebase";
 import { signInWithPopup, signOut, onAuthStateChanged, User } from "firebase/auth";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 interface AuthContextType {
   user: User | null;
@@ -17,6 +17,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -25,12 +26,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log("Auth state changed:", currentUser);
       setUser(currentUser);
       setLoading(false);
-      if (!currentUser) {
+      // Only redirect to /login if the user is not authenticated and not on a public route
+      if (!currentUser && pathname !== "/" && pathname !== "/login") {
         router.push("/login");
       }
     });
     return () => unsubscribe();
-  }, [router]);
+  }, [router, pathname]);
 
   const signInWithGoogle = async () => {
     try {

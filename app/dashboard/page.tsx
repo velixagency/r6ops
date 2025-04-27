@@ -11,10 +11,6 @@ export default function Dashboard() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!user && !loading) {
-      router.push("/submit");
-    }
-  
     if (user) {
       console.log("User object:", user);
       console.log("User UID:", user.uid, "Length:", user.uid.length);
@@ -26,14 +22,14 @@ export default function Dashboard() {
             try {
               errorData = await response.json();
             } catch (parseErr) {
-              errorData = { error: "Failed to parse error response" };
+              errorData = { error: "Failed to parse error response from API" };
             }
             console.error("API error:", {
               status: response.status,
               statusText: response.statusText,
               body: errorData,
             });
-            const errorMessage = errorData.error || `Failed to fetch resources: ${response.status} ${response.statusText}`;
+            const errorMessage = errorData.message || errorData.error || `Failed to fetch resources: ${response.status} ${response.statusText}`;
             throw new Error(errorMessage);
           }
           const result = await response.json();
