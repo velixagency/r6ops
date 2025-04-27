@@ -1,5 +1,11 @@
+/** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true,
+  // reactStrictMode: true,
+  api: {
+    bodyParser: {
+      sizeLimit: "10mb", // Increase the body size limit to 10 MB
+    },
+  },
 };
 
-export default nextConfig;
+module.exports = nextConfig;
