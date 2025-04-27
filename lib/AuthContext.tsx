@@ -22,11 +22,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      console.log("Auth state changed:", currentUser);
       setUser(currentUser);
       setLoading(false);
+      if (!currentUser) {
+        router.push("/login");
+      }
     });
     return () => unsubscribe();
-  }, []);
+  }, [router]);
 
   const signInWithGoogle = async () => {
     try {
@@ -34,7 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(result.user);
     } catch (error) {
       console.error("Google sign-in error:", error);
-      throw error; // Let the caller handle the error
+      throw error;
     }
   };
 
@@ -44,7 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(result.user);
     } catch (error) {
       console.error("Facebook sign-in error:", error);
-      throw error; // Let the caller handle the error
+      throw error;
     }
   };
 
@@ -52,7 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await signOut(auth);
       setUser(null);
-      router.push("/"); // Redirect to homepage after logout
+      router.push("/");
     } catch (error) {
       console.error("Logout error:", error);
     }

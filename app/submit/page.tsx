@@ -18,28 +18,33 @@ export default function Submit() {
   const [screenshot, setScreenshot] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [fetchError, setFetchError] = useState<string | null>(null); // New state for fetch errors
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user && !loading) {
       router.push("/login");
     }
-  }, [user, loading, router]);
-
-  useEffect(() => {
+  
     if (user) {
-      console.log("Fetching resources for user_id:", user.uid);
+      console.log("User object:", user);
+      console.log("User UID:", user.uid, "Length:", user.uid.length);
       const fetchResources = async () => {
         try {
           const response = await fetch(`/api/get-resources?user_id=${user.uid}`);
           if (!response.ok) {
-            const errorData = await response.json();
+            let errorData;
+            try {
+              errorData = await response.json();
+            } catch (parseErr) {
+              errorData = { error: "Failed to parse error response" };
+            }
             console.error("API error:", {
               status: response.status,
               statusText: response.statusText,
               body: errorData,
             });
-            throw new Error(errorData.error || `Failed to fetch resources: ${response.status} ${response.statusText}`);
+            const errorMessage = errorData.error || `Failed to fetch resources: ${response.status} ${response.statusText}`;
+            throw new Error(errorMessage);
           }
           const result = await response.json();
           console.log("Raw API response:", result);
@@ -62,7 +67,7 @@ export default function Submit() {
       };
       fetchResources();
     }
-  }, [user]);
+  }, [user, loading, router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -74,113 +79,6 @@ export default function Submit() {
     if (file) {
       setScreenshot(file);
     }
-  };
-
-  const extractDataFromScreenshot = async (formData: FormData): Promise<any> => {
-    const endpoint = process.env.AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT;
-    const apiKey = process.env.AZURE_DOCUMENT_INTELLIGENCE_API_KEY_1;
-    const region = process.env.AZURE_DOCUMENT_INTELLIGENCE_REGION || "westus";
-
-    if (!endpoint || !apiKey) {
-      throw new Error("Azure Document Intelligence credentials are missing. Ensure AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT and AZURE_DOCUMENT_INTELLIGENCE_API_KEY_1 are set.");
-    }
-
-    console.log(`Initiating Azure AI Document Intelligence analysis in region: ${region}`);
-
-    const analyzeUrl = `${endpoint}documentintelligence/documentModels/prebuilt-layout:analyze?api-version=2024-07-31-preview`;
-
-    const analyzeResponse = await fetch(analyzeUrl, {
-      method: "POST",
-      headers: {
-        "Ocp-Apim-Subscription-Key": apiKey,
-        "Content-Type": "multipart/form-data",
-      },
-      body: formData,
-    });
-
-    if (!analyzeResponse.ok) {
-      const errorText = await analyzeResponse.text();
-      throw new Error(`Failed to analyze screenshot: ${analyzeResponse.statusText} - ${errorText}`);
-    }
-
-    const operationLocation = analyzeResponse.headers.get("Operation-Location");
-
-    if (!operationLocation) {
-      throw new Error("Operation-Location header not found in analyze response.");
-    }
-
-    console.log("Analysis started, polling for result...");
-
-    let result;
-    for (let i = 0; i < 30; i++) {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      const pollResponse = await fetch(operationLocation, {
-        method: "GET",
-        headers: {
-          "Ocp-Apim-Subscription-Key": apiKey,
-        },
-      });
-
-      if (!pollResponse.ok) {
-        const errorText = await pollResponse.text();
-        throw new Error(`Failed to poll for result: ${pollResponse.statusText} - ${errorText}`);
-      }
-
-      result = await pollResponse.json();
-      if (result.status === "succeeded") {
-        console.log("Analysis succeeded.");
-        break;
-      } else if (result.status === "failed") {
-        throw new Error("Document analysis failed: " + JSON.stringify(result.error));
-      }
-    }
-
-    if (result.status !== "succeeded") {
-      throw new Error("Document analysis did not complete in time.");
-    }
-
-    const extractedText = result.analyzeResult?.content || "";
-    console.log("Extracted text:", extractedText);
-    return parseOcrText(extractedText);
-  };
-
-  const parseOcrText = (text: string): any => {
-    console.log("Parsing OCR text:", text);
-    
-    const lines = text.split("\n");
-    let values: string[] = [];
-    
-    for (const line of lines) {
-      const potentialValues = line.split(/\s+/).filter((word) => {
-        return /^[0-9,.]+[MK]?$/.test(word) || /^[0-9,]+$/.test(word);
-      });
-      if (potentialValues.length >= 5) {
-        values = potentialValues;
-        break;
-      }
-    }
-
-    if (values.length < 5) {
-      throw new Error("Could not find enough resource values in the screenshot. Expected format: [food, oil, steel, mineral, uranium]");
-    }
-
-    const parseValue = (value: string): number => {
-      value = value.replace(/,/g, "");
-      if (value.endsWith("M")) {
-        return parseFloat(value.replace("M", "")) * 1_000_000;
-      } else if (value.endsWith("K")) {
-        return parseFloat(value.replace("K", "")) * 1_000;
-      }
-      return parseInt(value) || 0;
-    };
-
-    return {
-      food: parseValue(values[1]),
-      oil: parseValue(values[2]),
-      steel: parseValue(values[3]),
-      mineral: parseValue(values[4]),
-      uranium: parseValue(values[5]),
-    };
   };
 
   const handleExtractData = async () => {
@@ -196,14 +94,23 @@ export default function Submit() {
       const formDataToSend = new FormData();
       formDataToSend.append("screenshot", screenshot);
 
-      const extractedData = await extractDataFromScreenshot(formDataToSend);
+      const response = await fetch("/api/extract-screenshot", {
+        method: "POST",
+        body: formDataToSend,
+      });
 
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to extract data from screenshot");
+      }
+
+      const { data } = await response.json();
       setFormData({
-        food: extractedData.food || 0,
-        oil: extractedData.oil || 0,
-        steel: extractedData.steel || 0,
-        mineral: extractedData.mineral || 0,
-        uranium: extractedData.uranium || 0,
+        food: data.food || 0,
+        oil: data.oil || 0,
+        steel: data.steel || 0,
+        mineral: data.mineral || 0,
+        uranium: data.uranium || 0,
       });
     } catch (err: any) {
       console.error("Extraction error:", err);
@@ -391,7 +298,7 @@ export default function Submit() {
                     <input
                       type="number"
                       id="steel"
-                      name Staffordshire="steel"
+                      name="steel"
                       value={formData.steel}
                       onChange={handleChange}
                       className="border p-2 w-full"
