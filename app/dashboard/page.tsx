@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../lib/AuthContext";
+import Link from "next/link";
 
 export default function Dashboard() {
   const router = useRouter();
@@ -52,37 +53,55 @@ export default function Dashboard() {
     totalSeconds %= 24 * 60 * 60;
     const hours = Math.floor(totalSeconds / (60 * 60));
     totalSeconds %= 60 * 60;
-    const minutes = Math.floor(totalSeconds / 60);
+    const minutes = Math.floor(totalSeconds / (60));
     const seconds = totalSeconds % 60;
     return `${days}d ${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
   };
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <div className="text-light-text text-lg">Loading...</div>;
   }
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Dashboard</h1>
-      {error && <p className="text-red-500 mb-4">{error}</p>}
-      {resources ? (
-        <div className="space-y-2">
-          <h2 className="text-xl font-semibold mb-2">Resources</h2>
-          <p>Food: {resources.food}</p>
-          <p>Oil: {resources.oil}</p>
-          <p>Steel: {resources.steel}</p>
-          <p>Mineral: {resources.mineral}</p>
-          <p>Uranium: {resources.uranium}</p>
-          <h2 className="text-xl font-semibold mb-2 mt-4">Speed-Ups</h2>
-          <p>Speed Up: {formatDuration(resources.speed_up)}</p>
-          <p>Building Speed Up: {formatDuration(resources.building_speed_up)}</p>
-          <p>Healing Speed Up: {formatDuration(resources.healing_speed_up)}</p>
-          <p>Recruitment Speed Up: {formatDuration(resources.recruitment_speed_up)}</p>
-          <p>Research Speed Up: {formatDuration(resources.research_speed_up)}</p>
+    <div className="min-h-screen p-6">
+      <div className="max-w-4xl mx-auto">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-accent-cyan">Dashboard</h1>
+          <Link
+            href="/submit"
+            className="bg-accent-cyan text-dark-bg font-semibold px-4 py-2 rounded-lg hover:bg-accent-green hover:text-dark-bg transition-colors shadow-cyan-glow"
+          >
+            Submit Resources
+          </Link>
         </div>
-      ) : (
-        <p>No resources found.</p>
-      )}
+        {error && <p className="text-red-500 mb-4">{error}</p>}
+        {resources ? (
+          <div className="space-y-8">
+            <div className="bg-dark-panel backdrop-blur-10 p-6 rounded-lg border border-border-glow shadow-cyan-glow">
+              <h2 className="text-2xl font-semibold text-accent-cyan mb-4">Resources</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-light-text">
+                <p><span className="font-medium text-accent-green">Food:</span> {resources.food.toLocaleString()}</p>
+                <p><span className="font-medium text-accent-green">Oil:</span> {resources.oil.toLocaleString()}</p>
+                <p><span className="font-medium text-accent-green">Steel:</span> {resources.steel.toLocaleString()}</p>
+                <p><span className="font-medium text-accent-green">Mineral:</span> {resources.mineral.toLocaleString()}</p>
+                <p><span className="font-medium text-accent-green">Uranium:</span> {resources.uranium.toLocaleString()}</p>
+              </div>
+            </div>
+            <div className="bg-dark-panel backdrop-blur-10 p-6 rounded-lg border border-border-glow shadow-cyan-glow">
+              <h2 className="text-2xl font-semibold text-accent-cyan mb-4">Speed-Ups</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-light-text">
+                <p><span className="font-medium text-accent-green">Speed Up:</span> {formatDuration(resources.speed_up)}</p>
+                <p><span className="font-medium text-accent-green">Building Speed Up:</span> {formatDuration(resources.building_speed_up)}</p>
+                <p><span className="font-medium text-accent-green">Healing Speed Up:</span> {formatDuration(resources.healing_speed_up)}</p>
+                <p><span className="font-medium text-accent-green">Recruitment Speed Up:</span> {formatDuration(resources.recruitment_speed_up)}</p>
+                <p><span className="font-medium text-accent-green">Research Speed Up:</span> {formatDuration(resources.research_speed_up)}</p>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <p className="text-light-text">No resources found.</p>
+        )}
+      </div>
     </div>
   );
 }

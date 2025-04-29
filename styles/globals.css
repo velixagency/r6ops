@@ -2,6 +2,30 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --foreground: #D1D5DB; /* Matches light-text */
+}
+
 body {
-  @apply bg-dark-bg text-muted-text;
+  @apply text-light-text;
+  background: linear-gradient(270deg, rgba(0, 0, 0, 0.20) 0%, rgba(0, 0, 0, 0.00) 6.9%), 
+              linear-gradient(270deg, rgba(0, 0, 0, 0.00) 92.89%, rgba(0, 0, 0, 0.20) 100%), 
+              radial-gradient(37.44% 104.22% at 35.31% -2.55%, #3A4251 0%, rgba(26, 31, 37, 0.00) 100%), 
+              #1A1F25;
+}
+
+.header-border {
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.50) 9.04%, rgba(0, 0, 0, 0.01) 51.58%, rgba(102, 102, 102, 0.50) 94.11%);
+  border-bottom: 1px solid color-mix(in srgb, var(--foreground) 10%, #0000);
+}
+
+.footer-border {
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.50) 9.04%, rgba(0, 0, 0, 0.01) 51.58%, rgba(102, 102, 102, 0.50) 94.11%);
+  border-top: 1px solid color-mix(in srgb, var(--foreground) 10%, #0000);
+}
+
+.nav-item{
+  @apply text-[12px] uppercase;
+  font-weight:500;
+  letter-spacing: 0.5px;
 }

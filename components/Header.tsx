@@ -2,32 +2,34 @@
 
 import Link from "next/link";
 import { useAuth } from "../lib/AuthContext";
+import { FaTachometerAlt, FaSignInAlt, FaSignOutAlt } from "react-icons/fa";
 
 export default function Header() {
   const { user, logout } = useAuth();
 
   return (
-    <header className="bg-gray-800 text-white p-4">
-      <nav className="container mx-auto flex justify-between items-center">
-        <Link href="/" className="text-xl font-bold">
-          R6Ops
+    <header className="backdrop-blur-10 backdrop-brightness-110 backdrop-saturate-120 header-border fixed w-full top-0 z-50">
+      <nav className="mx-auto p-1 flex justify-between items-center min-h-[40px] px-[100px]">
+        <Link href="/" className="text-[16px] font-bold text-white">
+          R6ops
         </Link>
         <div className="flex items-center space-x-4">
-          <Link href="/submit">Submit Resources</Link>
-          <Link href="/dashboard">Dashboard</Link>
+          <Link href="/dashboard" className="text-light-text hover:text-accent-cyan transition-colors">
+            <FaTachometerAlt size={24} />
+          </Link>
           {user ? (
             <>
-              <span className="text-sm">Welcome, {user.email}</span>
+              <span className="text-sm text-light-text">Welcome, {user.email}</span>
               <button
                 onClick={logout}
-                className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                className="text-light-text hover:text-accent-cyan transition-colors"
               >
-                Logout
+                <FaSignOutAlt size={24} />
               </button>
             </>
           ) : (
-            <Link href="/login" className="text-sm text-white hover:underline">
-              Sign In
+            <Link href="/login" className="text-light-text hover:text-accent-cyan transition-colors">
+              <FaSignInAlt size={24} />
             </Link>
           )}
         </div>
