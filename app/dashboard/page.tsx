@@ -63,8 +63,11 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen p-6">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen flex gap-5">
+      <div className="left-nav h-screen w-[300px] bg-[rgba(0,0,0,0.5)] pt-12">
+        xasxasxasx
+      </div>
+      <div className="h-screen w-full pt-12">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-accent-cyan">Dashboard</h1>
           <Link
@@ -76,25 +79,25 @@ export default function Dashboard() {
         </div>
         {error && <p className="text-red-500 mb-4">{error}</p>}
         {resources ? (
-          <div className="space-y-8">
+          <div className="grid grid-col-1 sm:grid-cols-2 gap-2">
             <div className="bg-dark-panel backdrop-blur-10 p-6 rounded-lg border border-border-glow shadow-cyan-glow">
-              <h2 className="text-2xl font-semibold text-accent-cyan mb-4">Resources</h2>
+              <h2 className="text-2xl font-semibold mb-4">Resources</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-light-text">
-                <p><span className="font-medium text-accent-green">Food:</span> {resources.food.toLocaleString()}</p>
-                <p><span className="font-medium text-accent-green">Oil:</span> {resources.oil.toLocaleString()}</p>
-                <p><span className="font-medium text-accent-green">Steel:</span> {resources.steel.toLocaleString()}</p>
-                <p><span className="font-medium text-accent-green">Mineral:</span> {resources.mineral.toLocaleString()}</p>
-                <p><span className="font-medium text-accent-green">Uranium:</span> {resources.uranium.toLocaleString()}</p>
+                <p><span className="">Food:</span> {resources.food.toLocaleString()}</p>
+                <p><span className="">Oil:</span> {resources.oil.toLocaleString()}</p>
+                <p><span className="">Steel:</span> {resources.steel.toLocaleString()}</p>
+                <p><span className="">Mineral:</span> {resources.mineral.toLocaleString()}</p>
+                <p><span className="">Uranium:</span> {resources.uranium.toLocaleString()}</p>
               </div>
             </div>
             <div className="bg-dark-panel backdrop-blur-10 p-6 rounded-lg border border-border-glow shadow-cyan-glow">
-              <h2 className="text-2xl font-semibold text-accent-cyan mb-4">Speed-Ups</h2>
+              <h2 className="text-2xl font-semibold mb-4">Speed-Ups</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-light-text">
-                <p><span className="font-medium text-accent-green">Speed Up:</span> {formatDuration(resources.speed_up)}</p>
-                <p><span className="font-medium text-accent-green">Building Speed Up:</span> {formatDuration(resources.building_speed_up)}</p>
-                <p><span className="font-medium text-accent-green">Healing Speed Up:</span> {formatDuration(resources.healing_speed_up)}</p>
-                <p><span className="font-medium text-accent-green">Recruitment Speed Up:</span> {formatDuration(resources.recruitment_speed_up)}</p>
-                <p><span className="font-medium text-accent-green">Research Speed Up:</span> {formatDuration(resources.research_speed_up)}</p>
+                <p><span className="">Speed Up:</span> {formatDuration(resources.speed_up)}</p>
+                <p><span className="">Building Speed Up:</span> {formatDuration(resources.building_speed_up)}</p>
+                <p><span className="">Healing Speed Up:</span> {formatDuration(resources.healing_speed_up)}</p>
+                <p><span className="">Recruitment Speed Up:</span> {formatDuration(resources.recruitment_speed_up)}</p>
+                <p><span className="">Research Speed Up:</span> {formatDuration(resources.research_speed_up)}</p>
               </div>
             </div>
           </div>

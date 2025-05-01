@@ -37,9 +37,7 @@ export default function RootLayout({
       <body className="flex flex-col min-h-screen font-neue">
         <AuthProvider>
           <Header />
-          <div className="flex-grow bg-hero-image bg-cover bg-center bg-fixed">
             <main className="flex-grow">{children}</main>
-          </div>
           <Footer />
         </AuthProvider>
       </body>
