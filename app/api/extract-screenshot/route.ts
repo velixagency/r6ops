@@ -63,6 +63,11 @@ export async function POST(request: Request) {
           if (match) {
             return { duration: match[0], nextIndex: j + 1 };
           }
+          // Also match MM:SS format (e.g., 50:00, 35:00)
+          const shortMatch = lines[j].match(/(\d{1,2}:\d{2})/i);
+          if (shortMatch) {
+            return { duration: shortMatch[0], nextIndex: j + 1 };
+          }
         }
         return { duration: null, nextIndex: startIndex };
       };
@@ -84,7 +89,6 @@ export async function POST(request: Request) {
 
         // Resource parsing (look for "Total Resources" values, which are the second values after the label)
         if (lowerLine.includes("food")) {
-          // Skip the first value (Total Items) and get the second value (Total Resources)
           const { value: firstValue, nextIndex: idxAfterFirst } = findNextValue(i + 1);
           if (firstValue) {
             const { value: secondValue } = findNextValue(idxAfterFirst);
@@ -92,7 +96,7 @@ export async function POST(request: Request) {
               data.food = parseValue(secondValue);
             }
           }
-          i = idxAfterFirst - 1; // Adjust index to continue after the second value
+          i = idxAfterFirst - 1;
         } else if (lowerLine.includes("oil")) {
           const { value: firstValue, nextIndex: idxAfterFirst } = findNextValue(i + 1);
           if (firstValue) {
@@ -123,29 +127,65 @@ export async function POST(request: Request) {
         }
         // Speed-up parsing
         else if (lowerLine.includes("total speed up time")) {
-          const { duration, nextIndex } = findNextDuration(i + 1);
-          if (duration) {
-            const match = duration.match(/(\d+d)?\s*(\d{1,2}:\d{2}:\d{2})/i);
-            if (match) {
-              const days = match[1] ? parseInt(match[1].replace("d", "")) : 0;
-              const timeParts = match[2].split(":").map(part => parseInt(part));
-              const hours = timeParts[0] || 0;
-              const minutes = timeParts[1] || 0;
-              const seconds = timeParts[2] || 0;
-              data.speed_up = (days * 24 * 60 * 60) + (hours * 60 * 60) + (minutes * 60) + seconds;
+          // Look for the next "Speed Up" label to ensure we're matching the correct duration
+          for (let j = i + 1; j < lines.length; j++) {
+            if (lines[j].toLowerCase().includes("speed up") && !lines[j].toLowerCase().includes("building") && !lines[j].toLowerCase().includes("healing") && !lines[j].toLowerCase().includes("recruitment") && !lines[j].toLowerCase().includes("research")) {
+              const { duration, nextIndex } = findNextDuration(j + 1);
+              if (duration) {
+                console.log(`Parsing Speed Up duration: ${duration}`);
+                const match = duration.match(/(\d+d)?\s*(\d{1,2}:\d{2}:\d{2})/i) || duration.match(/(\d{1,2}:\d{2})/i);
+                if (match) {
+                  let days = 0, hours = 0, minutes = 0, seconds = 0;
+                  if (match[1] && match[1].endsWith("d")) {
+                    // Format: "2d 12:40:00"
+                    days = parseInt(match[1].replace("d", "")) || 0;
+                    const timeParts = match[2].split(":").map(part => parseInt(part));
+                    hours = timeParts[0] || 0;
+                    minutes = timeParts[1] || 0;
+                    seconds = timeParts[2] || 0;
+                  } else if (match[0].includes(":")) {
+                    // Format: "50:00" or "01:10:00"
+                    const timeParts = match[0].split(":").map(part => parseInt(part));
+                    if (timeParts.length === 3) {
+                      hours = timeParts[0] || 0;
+                      minutes = timeParts[1] || 0;
+                      seconds = timeParts[2] || 0;
+                    } else if (timeParts.length === 2) {
+                      minutes = timeParts[0] || 0;
+                      seconds = timeParts[1] || 0;
+                    }
+                  }
+                  data.speed_up = (days * 24 * 60 * 60) + (hours * 60 * 60) + (minutes * 60) + seconds;
+                }
+              }
+              i = nextIndex - 1;
+              break;
             }
-            i = nextIndex - 1;
           }
         } else if (lowerLine.includes("building speed up")) {
           const { duration, nextIndex } = findNextDuration(i + 1);
           if (duration) {
-            const match = duration.match(/(\d+d)?\s*(\d{1,2}:\d{2}:\d{2})/i);
+            console.log(`Parsing Building Speed Up duration: ${duration}`);
+            const match = duration.match(/(\d+d)?\s*(\d{1,2}:\d{2}:\d{2})/i) || duration.match(/(\d{1,2}:\d{2})/i);
             if (match) {
-              const days = match[1] ? parseInt(match[1].replace("d", "")) : 0;
-              const timeParts = match[2].split(":").map(part => parseInt(part));
-              const hours = timeParts[0] || 0;
-              const minutes = timeParts[1] || 0;
-              const seconds = timeParts[2] || 0;
+              let days = 0, hours = 0, minutes = 0, seconds = 0;
+              if (match[1] && match[1].endsWith("d")) {
+                days = parseInt(match[1].replace("d", "")) || 0;
+                const timeParts = match[2].split(":").map(part => parseInt(part));
+                hours = timeParts[0] || 0;
+                minutes = timeParts[1] || 0;
+                seconds = timeParts[2] || 0;
+              } else if (match[0].includes(":")) {
+                const timeParts = match[0].split(":").map(part => parseInt(part));
+                if (timeParts.length === 3) {
+                  hours = timeParts[0] || 0;
+                  minutes = timeParts[1] || 0;
+                  seconds = timeParts[2] || 0;
+                } else if (timeParts.length === 2) {
+                  minutes = timeParts[0] || 0;
+                  seconds = timeParts[1] || 0;
+                }
+              }
               data.building_speed_up = (days * 24 * 60 * 60) + (hours * 60 * 60) + (minutes * 60) + seconds;
             }
             i = nextIndex - 1;
@@ -153,13 +193,27 @@ export async function POST(request: Request) {
         } else if (lowerLine.includes("healing speed up")) {
           const { duration, nextIndex } = findNextDuration(i + 1);
           if (duration) {
-            const match = duration.match(/(\d+d)?\s*(\d{1,2}:\d{2}:\d{2})/i);
+            console.log(`Parsing Healing Speed Up duration: ${duration}`);
+            const match = duration.match(/(\d+d)?\s*(\d{1,2}:\d{2}:\d{2})/i) || duration.match(/(\d{1,2}:\d{2})/i);
             if (match) {
-              const days = match[1] ? parseInt(match[1].replace("d", "")) : 0;
-              const timeParts = match[2].split(":").map(part => parseInt(part));
-              const hours = timeParts[0] || 0;
-              const minutes = timeParts[1] || 0;
-              const seconds = timeParts[2] || 0;
+              let days = 0, hours = 0, minutes = 0, seconds = 0;
+              if (match[1] && match[1].endsWith("d")) {
+                days = parseInt(match[1].replace("d", "")) || 0;
+                const timeParts = match[2].split(":").map(part => parseInt(part));
+                hours = timeParts[0] || 0;
+                minutes = timeParts[1] || 0;
+                seconds = timeParts[2] || 0;
+              } else if (match[0].includes(":")) {
+                const timeParts = match[0].split(":").map(part => parseInt(part));
+                if (timeParts.length === 3) {
+                  hours = timeParts[0] || 0;
+                  minutes = timeParts[1] || 0;
+                  seconds = timeParts[2] || 0;
+                } else if (timeParts.length === 2) {
+                  minutes = timeParts[0] || 0;
+                  seconds = timeParts[1] || 0;
+                }
+              }
               data.healing_speed_up = (days * 24 * 60 * 60) + (hours * 60 * 60) + (minutes * 60) + seconds;
             }
             i = nextIndex - 1;
@@ -167,13 +221,27 @@ export async function POST(request: Request) {
         } else if (lowerLine.includes("recruitment speed up")) {
           const { duration, nextIndex } = findNextDuration(i + 1);
           if (duration) {
-            const match = duration.match(/(\d+d)?\s*(\d{1,2}:\d{2}:\d{2})/i);
+            console.log(`Parsing Recruitment Speed Up duration: ${duration}`);
+            const match = duration.match(/(\d+d)?\s*(\d{1,2}:\d{2}:\d{2})/i) || duration.match(/(\d{1,2}:\d{2})/i);
             if (match) {
-              const days = match[1] ? parseInt(match[1].replace("d", "")) : 0;
-              const timeParts = match[2].split(":").map(part => parseInt(part));
-              const hours = timeParts[0] || 0;
-              const minutes = timeParts[1] || 0;
-              const seconds = timeParts[2] || 0;
+              let days = 0, hours = 0, minutes = 0, seconds = 0;
+              if (match[1] && match[1].endsWith("d")) {
+                days = parseInt(match[1].replace("d", "")) || 0;
+                const timeParts = match[2].split(":").map(part => parseInt(part));
+                hours = timeParts[0] || 0;
+                minutes = timeParts[1] || 0;
+                seconds = timeParts[2] || 0;
+              } else if (match[0].includes(":")) {
+                const timeParts = match[0].split(":").map(part => parseInt(part));
+                if (timeParts.length === 3) {
+                  hours = timeParts[0] || 0;
+                  minutes = timeParts[1] || 0;
+                  seconds = timeParts[2] || 0;
+                } else if (timeParts.length === 2) {
+                  minutes = timeParts[0] || 0;
+                  seconds = timeParts[1] || 0;
+                }
+              }
               data.recruitment_speed_up = (days * 24 * 60 * 60) + (hours * 60 * 60) + (minutes * 60) + seconds;
             }
             i = nextIndex - 1;
@@ -181,13 +249,27 @@ export async function POST(request: Request) {
         } else if (lowerLine.includes("research speed up")) {
           const { duration, nextIndex } = findNextDuration(i + 1);
           if (duration) {
-            const match = duration.match(/(\d+d)?\s*(\d{1,2}:\d{2}:\d{2})/i);
+            console.log(`Parsing Research Speed Up duration: ${duration}`);
+            const match = duration.match(/(\d+d)?\s*(\d{1,2}:\d{2}:\d{2})/i) || duration.match(/(\d{1,2}:\d{2})/i);
             if (match) {
-              const days = match[1] ? parseInt(match[1].replace("d", "")) : 0;
-              const timeParts = match[2].split(":").map(part => parseInt(part));
-              const hours = timeParts[0] || 0;
-              const minutes = timeParts[1] || 0;
-              const seconds = timeParts[2] || 0;
+              let days = 0, hours = 0, minutes = 0, seconds = 0;
+              if (match[1] && match[1].endsWith("d")) {
+                days = parseInt(match[1].replace("d", "")) || 0;
+                const timeParts = match[2].split(":").map(part => parseInt(part));
+                hours = timeParts[0] || 0;
+                minutes = timeParts[1] || 0;
+                seconds = timeParts[2] || 0;
+              } else if (match[0].includes(":")) {
+                const timeParts = match[0].split(":").map(part => parseInt(part));
+                if (timeParts.length === 3) {
+                  hours = timeParts[0] || 0;
+                  minutes = timeParts[1] || 0;
+                  seconds = timeParts[2] || 0;
+                } else if (timeParts.length === 2) {
+                  minutes = timeParts[0] || 0;
+                  seconds = timeParts[1] || 0;
+                }
+              }
               data.research_speed_up = (days * 24 * 60 * 60) + (hours * 60 * 60) + (minutes * 60) + seconds;
             }
             i = nextIndex - 1;
@@ -207,13 +289,13 @@ export async function POST(request: Request) {
     };
 
     const parseValue = (value: string): number => {
-      value = value.replace(/,/g, "");
+      value = value.replace(/,/g, ""); // Remove commas
       if (value.endsWith("M")) {
         return parseFloat(value.replace("M", "")) * 1_000_000;
       } else if (value.endsWith("K")) {
         return parseFloat(value.replace("K", "")) * 1_000;
       }
-      return parseInt(value) || 0;
+      return parseFloat(value) || 0;
     };
 
     const parsedData = parseOcrText(extractedText);

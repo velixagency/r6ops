@@ -47,15 +47,31 @@ export default function Dashboard() {
     }
   }, [user, loading, router]);
 
-  // Helper function to format seconds into days, hours, minutes, seconds
+  // Helper function to format seconds into the desired format
   const formatDuration = (totalSeconds: number): string => {
+    if (totalSeconds === 0) {
+      return "0";
+    }
+
     const days = Math.floor(totalSeconds / (24 * 60 * 60));
     totalSeconds %= 24 * 60 * 60;
     const hours = Math.floor(totalSeconds / (60 * 60));
     totalSeconds %= 60 * 60;
-    const minutes = Math.floor(totalSeconds / (60));
+    const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
-    return `${days}d ${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+
+    // If there are days, show the full format
+    if (days > 0) {
+      return `${days}d ${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+    }
+
+    // If there are hours, show HH:MM:SS
+    if (hours > 0) {
+      return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+    }
+
+    // If less than an hour, show MM:SS
+    return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
   };
 
   if (loading) {

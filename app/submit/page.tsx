@@ -21,8 +21,9 @@ export default function Submit() {
     vip_level: 0,
   });
   const [inputMode, setInputMode] = useState<"manual" | "screenshot">("manual");
-  const [screenshots, setScreenshots] = useState<File[]>([]); // Changed to array for multiple files
+  const [screenshots, setScreenshots] = useState<File[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [currentImageTitle, setCurrentImageTitle] = useState<string>(""); // Track the current image title
   const [error, setError] = useState<string | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [dataComplete, setDataComplete] = useState(false);
@@ -123,6 +124,9 @@ export default function Submit() {
 
       // Process each image sequentially
       for (const file of files) {
+        // Update the loading text with the image title
+        setCurrentImageTitle("Processing..."); // Initial placeholder while extracting text
+
         // Compress the image client-side
         const compressedFile = await imageCompression(file, {
           maxSizeMB: 1, // Compress to 1 MB
@@ -161,6 +165,17 @@ export default function Submit() {
         }
 
         const { data } = await response.json();
+
+        // Infer the image title from the extracted text
+        const extractedText = data.extractedText || "";
+        let imageTitle = "Unknown Image";
+        if (extractedText.toLowerCase().includes("resources and speed up info")) {
+          imageTitle = "Resources and Speed Up Info";
+        } else if (extractedText.toLowerCase().includes("vip")) {
+          imageTitle = "City Overview";
+        }
+        setCurrentImageTitle(`Loading ${imageTitle}`);
+
         // Merge extracted data, prioritizing non-zero values
         extractedData = {
           ...extractedData,
@@ -447,7 +462,7 @@ export default function Submit() {
                     <div className="flex justify-center mb-4">
                       <div className="w-12 h-12 border-4 border-accent-cyan border-t-transparent rounded-full animate-spin"></div>
                     </div>
-                    <p className="text-light-text text-lg">Extracting Data...</p>
+                    <p className="text-light-text text-lg">{currentImageTitle}</p>
                   </div>
                 )}
                 {dataComplete && (
