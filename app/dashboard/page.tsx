@@ -74,35 +74,40 @@ export default function Dashboard() {
             href="/submit"
             className="bg-accent-cyan text-dark-bg font-semibold px-4 py-2 rounded-lg hover:bg-accent-green hover:text-dark-bg transition-colors shadow-cyan-glow"
           >
-            Submit Resources
+            Submit Data
           </Link>
         </div>
         {error && <p className="text-red-500 mb-4">{error}</p>}
         {resources ? (
-          <div className="grid grid-col-1 sm:grid-cols-2 gap-2">
+          <div className="space-y-8">
             <div className="bg-dark-panel backdrop-blur-10 p-6 rounded-lg border border-border-glow shadow-cyan-glow">
-              <h2 className="text-2xl font-semibold mb-4">Resources</h2>
+              <h2 className="text-2xl font-semibold text-accent-cyan mb-4">Player Stats</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-light-text">
-                <p><span className="">Food:</span> {resources.food.toLocaleString()}</p>
-                <p><span className="">Oil:</span> {resources.oil.toLocaleString()}</p>
-                <p><span className="">Steel:</span> {resources.steel.toLocaleString()}</p>
-                <p><span className="">Mineral:</span> {resources.mineral.toLocaleString()}</p>
-                <p><span className="">Uranium:</span> {resources.uranium.toLocaleString()}</p>
+                <p><span className="font-medium text-accent-green">VIP Level:</span> {resources.vip_level}</p>
               </div>
             </div>
             <div className="bg-dark-panel backdrop-blur-10 p-6 rounded-lg border border-border-glow shadow-cyan-glow">
-              <h2 className="text-2xl font-semibold mb-4">Speed-Ups</h2>
+              <h2 className="text-2xl font-semibold text-accent-cyan mb-4">Resources</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-light-text">
-                <p><span className="">Speed Up:</span> {formatDuration(resources.speed_up)}</p>
-                <p><span className="">Building Speed Up:</span> {formatDuration(resources.building_speed_up)}</p>
-                <p><span className="">Healing Speed Up:</span> {formatDuration(resources.healing_speed_up)}</p>
-                <p><span className="">Recruitment Speed Up:</span> {formatDuration(resources.recruitment_speed_up)}</p>
-                <p><span className="">Research Speed Up:</span> {formatDuration(resources.research_speed_up)}</p>
+                <p><span className="font-medium text-accent-green">Food:</span> {resources.food.toLocaleString()}</p>
+                <p><span className="font-medium text-accent-green">Oil:</span> {resources.oil.toLocaleString()}</p>
+                <p><span className="font-medium text-accent-green">Steel:</span> {resources.steel.toLocaleString()}</p>
+                <p><span className="font-medium text-accent-green">Mineral:</span> {resources.mineral.toLocaleString()}</p>
+              </div>
+            </div>
+            <div className="bg-dark-panel backdrop-blur-10 p-6 rounded-lg border border-border-glow shadow-cyan-glow">
+              <h2 className="text-2xl font-semibold text-accent-cyan mb-4">Speed-Ups</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-light-text">
+                <p><span className="font-medium text-accent-green">Speed Up:</span> {formatDuration(resources.speed_up)}</p>
+                <p><span className="font-medium text-accent-green">Building Speed Up:</span> {formatDuration(resources.building_speed_up)}</p>
+                <p><span className="font-medium text-accent-green">Healing Speed Up:</span> {formatDuration(resources.healing_speed_up)}</p>
+                <p><span className="font-medium text-accent-green">Recruitment Speed Up:</span> {formatDuration(resources.recruitment_speed_up)}</p>
+                <p><span className="font-medium text-accent-green">Research Speed Up:</span> {formatDuration(resources.research_speed_up)}</p>
               </div>
             </div>
           </div>
         ) : (
-          <p className="text-light-text">No resources found.</p>
+          <p className="text-light-text">No data found.</p>
         )}
       </div>
     </div>

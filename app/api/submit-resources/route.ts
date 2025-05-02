@@ -18,12 +18,12 @@ export async function POST(request: Request) {
       oil, 
       steel, 
       mineral, 
-      uranium, 
       speed_up, 
       building_speed_up, 
       healing_speed_up, 
       recruitment_speed_up, 
       research_speed_up, 
+      vip_level, // Keep vip_level
       troop_levels 
     } = await request.json();
 
@@ -37,12 +37,12 @@ export async function POST(request: Request) {
       oil: Number(oil) || 0,
       steel: Number(steel) || 0,
       mineral: Number(mineral) || 0,
-      uranium: Number(uranium) || 0,
       speed_up: Number(speed_up) || 0,
       building_speed_up: Number(building_speed_up) || 0,
       healing_speed_up: Number(healing_speed_up) || 0,
       recruitment_speed_up: Number(recruitment_speed_up) || 0,
       research_speed_up: Number(research_speed_up) || 0,
+      vip_level: Number(vip_level) || 0, // Keep vip_level
       troop_levels: troop_levels || {},
       created_at: new Date().toISOString(),
     });

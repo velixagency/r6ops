@@ -14,14 +14,29 @@ export async function POST(request: Request) {
     }
 
     // Convert the base64 string to a Buffer
-    const buffer = Buffer.from(image, "base64");
+    let buffer;
+    try {
+      buffer = Buffer.from(image, "base64");
+    } catch (err) {
+      console.error("Failed to convert base64 to buffer:", err);
+      return NextResponse.json({ error: "Invalid base64 image data" }, { status: 400 });
+    }
 
     // Use Google Cloud Vision API to extract text from the image
-    const [result] = await client.textDetection({
-      image: {
-        content: buffer,
-      },
-    });
+    let result;
+    try {
+      [result] = await client.textDetection({
+        image: {
+          content: buffer,
+        },
+      });
+    } catch (err) {
+      console.error("Vision API error:", err);
+      return NextResponse.json(
+        { error: `Vision API error: ${err.message || "Unknown error"}` },
+        { status: 500 }
+      );
+    }
 
     const extractedText = result.textAnnotations?.[0]?.description || "";
     console.log("Extracted text:", extractedText);
@@ -33,12 +48,12 @@ export async function POST(request: Request) {
         oil: 0,
         steel: 0,
         mineral: 0,
-        uranium: 0,
         speed_up: 0, // Total speed up time in seconds
         building_speed_up: 0, // Building speed up time in seconds
         healing_speed_up: 0, // Healing speed up time in seconds
         recruitment_speed_up: 0, // Recruitment speed up time in seconds
         research_speed_up: 0, // Research speed up time in seconds
+        vip_level: 0,
       };
 
       // Helper function to find the next duration line starting from a given index
@@ -52,70 +67,62 @@ export async function POST(request: Request) {
         return { duration: null, nextIndex: startIndex };
       };
 
-      // Iterate through lines and look for resource labels and speed-up values
+      // Helper function to find the next numerical value starting from a given index
+      const findNextValue = (startIndex: number): { value: string | null, nextIndex: number } => {
+        for (let j = startIndex; j < lines.length; j++) {
+          const match = lines[j].match(/([\d,.]+[MK]?)/i);
+          if (match) {
+            return { value: match[1], nextIndex: j + 1 };
+          }
+        }
+        return { value: null, nextIndex: startIndex };
+      };
+
+      // Iterate through lines and look for resource labels, speed-up values, and VIP level
       for (let i = 0; i < lines.length; i++) {
         const lowerLine = lines[i].toLowerCase();
 
-        // Resource parsing
+        // Resource parsing (look for "Total Resources" values, which are the second values after the label)
         if (lowerLine.includes("food")) {
-          let match = lines[i].match(/food\s*([\d,.]+[MK]?)(?=\s|$)/i);
-          if (match) {
-            data.food = parseValue(match[1]);
-          } else {
-            const nextLine = i + 1 < lines.length ? lines[i + 1] : null;
-            if (nextLine) {
-              match = nextLine.match(/([\d,.]+[MK]?)/i);
-              if (match) data.food = parseValue(match[1]);
+          // Skip the first value (Total Items) and get the second value (Total Resources)
+          const { value: firstValue, nextIndex: idxAfterFirst } = findNextValue(i + 1);
+          if (firstValue) {
+            const { value: secondValue } = findNextValue(idxAfterFirst);
+            if (secondValue) {
+              data.food = parseValue(secondValue);
             }
           }
+          i = idxAfterFirst - 1; // Adjust index to continue after the second value
         } else if (lowerLine.includes("oil")) {
-          let match = lines[i].match(/oil\s*([\d,.]+[MK]?)(?=\s|$)/i);
-          if (match) {
-            data.oil = parseValue(match[1]);
-          } else {
-            const nextLine = i + 1 < lines.length ? lines[i + 1] : null;
-            if (nextLine) {
-              match = nextLine.match(/([\d,.]+[MK]?)/i);
-              if (match) data.oil = parseValue(match[1]);
+          const { value: firstValue, nextIndex: idxAfterFirst } = findNextValue(i + 1);
+          if (firstValue) {
+            const { value: secondValue } = findNextValue(idxAfterFirst);
+            if (secondValue) {
+              data.oil = parseValue(secondValue);
             }
           }
+          i = idxAfterFirst - 1;
         } else if (lowerLine.includes("steel")) {
-          let match = lines[i].match(/steel\s*([\d,.]+[MK]?)(?=\s|$)/i);
-          if (match) {
-            data.steel = parseValue(match[1]);
-          } else {
-            const nextLine = i + 1 < lines.length ? lines[i + 1] : null;
-            if (nextLine) {
-              match = nextLine.match(/([\d,.]+[MK]?)/i);
-              if (match) data.steel = parseValue(match[1]);
+          const { value: firstValue, nextIndex: idxAfterFirst } = findNextValue(i + 1);
+          if (firstValue) {
+            const { value: secondValue } = findNextValue(idxAfterFirst);
+            if (secondValue) {
+              data.steel = parseValue(secondValue);
             }
           }
+          i = idxAfterFirst - 1;
         } else if (lowerLine.includes("mineral")) {
-          let match = lines[i].match(/mineral(?:s)?\s*([\d,.]+[MK]?)(?=\s|$)/i);
-          if (match) {
-            data.mineral = parseValue(match[1]);
-          } else {
-            const nextLine = i + 1 < lines.length ? lines[i + 1] : null;
-            if (nextLine) {
-              match = nextLine.match(/([\d,.]+[MK]?)/i);
-              if (match) data.mineral = parseValue(match[1]);
+          const { value: firstValue, nextIndex: idxAfterFirst } = findNextValue(i + 1);
+          if (firstValue) {
+            const { value: secondValue } = findNextValue(idxAfterFirst);
+            if (secondValue) {
+              data.mineral = parseValue(secondValue);
             }
           }
-        } else if (lowerLine.includes("uranium")) {
-          let match = lines[i].match(/uranium\s*([\d,.]+[MK]?)(?=\s|$)/i);
-          if (match) {
-            data.uranium = parseValue(match[1]);
-          } else {
-            const nextLine = i + 1 < lines.length ? lines[i + 1] : null;
-            if (nextLine) {
-              match = nextLine.match(/([\d,.]+[MK]?)/i);
-              if (match) data.uranium = parseValue(match[1]);
-            }
-          }
+          i = idxAfterFirst - 1;
         }
         // Speed-up parsing
         else if (lowerLine.includes("total speed up time")) {
-          // Look for the next duration after "Total Speed Up Time"
           const { duration, nextIndex } = findNextDuration(i + 1);
           if (duration) {
             const match = duration.match(/(\d+d)?\s*(\d{1,2}:\d{2}:\d{2})/i);
@@ -127,7 +134,7 @@ export async function POST(request: Request) {
               const seconds = timeParts[2] || 0;
               data.speed_up = (days * 24 * 60 * 60) + (hours * 60 * 60) + (minutes * 60) + seconds;
             }
-            i = nextIndex - 1; // Adjust the index to continue from the duration line
+            i = nextIndex - 1;
           }
         } else if (lowerLine.includes("building speed up")) {
           const { duration, nextIndex } = findNextDuration(i + 1);
@@ -184,6 +191,13 @@ export async function POST(request: Request) {
               data.research_speed_up = (days * 24 * 60 * 60) + (hours * 60 * 60) + (minutes * 60) + seconds;
             }
             i = nextIndex - 1;
+          }
+        }
+        // VIP Level parsing
+        else if (lowerLine.includes("vip")) {
+          const match = lines[i].match(/VIP\s*(\d+)/i);
+          if (match) {
+            data.vip_level = parseInt(match[1]) || 0;
           }
         }
       }
