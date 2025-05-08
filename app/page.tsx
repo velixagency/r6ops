@@ -19,12 +19,26 @@ export default function Home() {
             <p className="text-xl md:text-2xl text-light-text mb-8">
               Your Age of Origins Companion
             </p>
-            <Link
-              href={user ? "/dashboard" : "/login"}
-              className="inline-block bg-accent-cyan text-dark-bg font-semibold px-6 py-3 rounded-lg hover:bg-accent-green hover:text-dark-bg transition-colors shadow-cyan-glow"
-            >
-              Get Started Now
-            </Link>
+            <div className="space-x-4">
+              <Link
+                href={user ? "/dashboard" : "/login"}
+                className="inline-block bg-accent-cyan text-dark-bg font-semibold px-6 py-3 rounded-lg hover:bg-accent-green hover:text-dark-bg transition-colors shadow-cyan-glow"
+              >
+                Get Started
+              </Link>
+              <Link
+                href="/signup"
+                className="inline-block bg-accent-gold text-dark-bg font-semibold px-6 py-3 rounded-lg hover:bg-accent-cyan hover:text-dark-bg transition-colors shadow-cyan-glow"
+              >
+                Sign Up
+              </Link>
+              <Link
+                href="/subscriptions"
+                className="inline-block bg-accent-cyan text-dark-bg font-semibold px-6 py-3 rounded-lg hover:bg-accent-green hover:text-dark-bg transition-colors shadow-cyan-glow"
+              >
+                View Plans
+              </Link>
+            </div>
           </div>
         </section>
 
@@ -230,7 +244,11 @@ export default function Home() {
               <div>
                 <h3 className="text-xl font-semibold text-accent-green mb-2">Is R6Ops free to use?</h3>
                 <p className="text-light-text">
-                  Yes, R6Ops is completely free to use. Sign up today and start optimizing your gameplay!
+                  R6Ops offers both free and premium plans. Check out our{" "}
+                  <Link href="/subscriptions" className="text-accent-cyan hover:underline">
+                    subscription plans
+                  </Link>{" "}
+                  to learn more.
                 </p>
               </div>
               <div>
@@ -250,7 +268,7 @@ export default function Home() {
               Start Dominating Age of Origins with AI-Powered Insights Today!
             </h2>
             <p className="text-lg md:text-xl text-light-text mb-8">
-              Join now and get your personalized action plan for free.
+              Join now and get your personalized action plan.
             </p>
             <Link
               href={user ? "/dashboard" : "/login"}

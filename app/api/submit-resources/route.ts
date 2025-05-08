@@ -1,60 +1,270 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://berwkudcdaemhgqoiwkn.supabase.co";
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-if (!supabaseServiceKey) {
-  throw new Error("SUPABASE_SERVICE_ROLE_KEY is not set");
-}
-
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+import { supabase } from "../../../lib/supabaseClient";
 
 export async function POST(request: Request) {
   try {
-    const { 
-      user_id, 
-      food, 
-      oil, 
-      steel, 
-      mineral, 
-      speed_up, 
-      building_speed_up, 
-      healing_speed_up, 
-      recruitment_speed_up, 
-      research_speed_up, 
-      vip_level, // Keep vip_level
-      troop_levels 
-    } = await request.json();
-
-    if (!user_id || typeof user_id !== "string" || user_id.length !== 28) {
-      return NextResponse.json({ error: "Invalid user_id" }, { status: 400 });
-    }
-
-    const { error } = await supabase.from("resources").insert({
+    const body = await request.json();
+    const {
       user_id,
-      food: Number(food) || 0,
-      oil: Number(oil) || 0,
-      steel: Number(steel) || 0,
-      mineral: Number(mineral) || 0,
-      speed_up: Number(speed_up) || 0,
-      building_speed_up: Number(building_speed_up) || 0,
-      healing_speed_up: Number(healing_speed_up) || 0,
-      recruitment_speed_up: Number(recruitment_speed_up) || 0,
-      research_speed_up: Number(research_speed_up) || 0,
-      vip_level: Number(vip_level) || 0, // Keep vip_level
-      troop_levels: troop_levels || {},
-      created_at: new Date().toISOString(),
-    });
+      food,
+      oil,
+      steel,
+      mineral,
+      speed_up,
+      building_speed_up,
+      healing_speed_up,
+      recruitment_speed_up,
+      research_speed_up,
+      vip_level,
+      user_id_value,
+      nation,
+      power_rank,
+      battle_power,
+      enemy_units_killed,
+      defense_victory,
+      siege_victory,
+      losses,
+      sieges_failed,
+      individual_reputation,
+      exp_current,
+      exp_total,
+      gas_current,
+      gas_total,
+      defense_against_biochemical_zombies_boost,
+      enemy_melee_attack_reduction,
+      enemy_mid_range_attack_reduction,
+      enemy_long_range_attack_reduction,
+      enemy_biochemical_zombie_attack_reduction,
+      enemy_melee_defense_reduction,
+      enemy_mid_range_defense_reduction,
+      enemy_long_range_defense_reduction,
+      enemy_biochemical_zombie_defense_reduction,
+      oil_boost,
+      oil_boost_bonus,
+      steel_boost,
+      steel_boost_bonus,
+      mineral_production,
+      mineral_production_bonus,
+      food_boost,
+      food_boost_bonus,
+      food_gather_bonus,
+      oil_gather_bonus,
+      steel_gather_bonus,
+      mineral_gather_bonus,
+      gold_gather_bonus,
+      building_speed_additional_bonus,
+      technology_research,
+      load_boost,
+      monster_attack_speed,
+      mobility_recovery,
+      healing_speed,
+      increase_max_wounded_units,
+      increase_max_wounded_units_bonus,
+      vehicle_queue,
+      vehicle_queue_bonus,
+      fleet_troops_units_limit,
+      fleet_troops_units_limit_bonus,
+      cross_nation_battle_troops_expansion,
+      fleet_speed,
+      recruitment_speed_up_stat,
+      melee_attack,
+      melee_defense,
+      melee_hp,
+      mid_range_attack,
+      mid_range_defense,
+      mid_range_hp,
+      long_range_attack,
+      long_range_defense,
+      long_range_hp,
+      increases_damage_to_long_range_troops,
+      increases_damage_to_mid_range_troops,
+      increases_damage_to_melee_troops,
+      reduces_damage_taken_from_long_range_troops,
+      reduces_damage_taken_from_mid_range_troops,
+      reduces_damage_taken_from_melee_troops,
+      biochemical_zombies_recruit_speed_boost,
+      biochemical_materials_collection_rate_boost,
+      biochemical_zombies_attack_boost,
+      biochemical_zombies_hp_boost,
+      biochemical_zombies_defense_boost,
+      biochemical_materials_collection_boost,
+      biochemical_zombies_recruit_limit_boost,
+      biochemical_zombie_army_limit_boost,
+      biochemical_zombies_limit_boost,
+      all_troops_block,
+      all_troops_block_percentage,
+      all_troops_disruptor_resistance,
+      all_troops_disruptor_resistance_percentage,
+      all_troops_misfire_resistance,
+      all_troops_misfire_resistance_percentage,
+      cross_nation_battle_melee_attack,
+      cross_nation_battle_melee_defense,
+      cross_nation_battle_melee_hp,
+      cross_nation_battle_mid_range_attack,
+      cross_nation_battle_mid_range_defense,
+      cross_nation_battle_mid_range_hp,
+      cross_nation_battle_long_range_attack,
+      cross_nation_battle_long_range_defense,
+      cross_nation_battle_long_range_hp,
+      cross_nation_battle_biochemical_zombies_attack,
+      cross_nation_battle_biochemical_zombies_defense,
+      cross_nation_battle_biochemical_zombies_hp,
+      attack_against_melee_boost,
+      attack_against_mid_range_boost,
+      attack_against_long_range_boost,
+      attack_against_biochemical_zombies_boost,
+      defense_against_melee_boost,
+      defense_against_mid_range_boost,
+      defense_against_long_range_boost,
+      username,
+      troop_levels,
+    } = body;
 
-    if (error) {
-      console.error("Insert error:", JSON.stringify(error, null, 2));
-      return NextResponse.json({ error: error.message }, { status: 400 });
+    if (!user_id) {
+      return NextResponse.json({ error: "User ID is required" }, { status: 400 });
     }
 
-    return NextResponse.json({ message: "Resources submitted successfully" });
-  } catch (err: any) {
-    console.error("Unexpected error:", JSON.stringify(err, null, 2));
-    return NextResponse.json({ error: `Unexpected error: ${err.message || "Unknown error"}` }, { status: 500 });
+    const resourcesData = {
+      user_id,
+      food: food || 0,
+      oil: oil || 0,
+      steel: steel || 0,
+      mineral: mineral || 0,
+      speed_up: speed_up || 0,
+      building_speed_up: building_speed_up || 0,
+      healing_speed_up: healing_speed_up || 0,
+      recruitment_speed_up: recruitment_speed_up || 0,
+      research_speed_up: research_speed_up || 0,
+    };
+
+    const statsData = {
+      user_id,
+      battle_power: battle_power || 0,
+      enemy_units_killed: enemy_units_killed || 0,
+      defense_victory: defense_victory || 0,
+      siege_victory: siege_victory || 0,
+      losses: losses || 0,
+      sieges_failed: sieges_failed || 0,
+      individual_reputation: individual_reputation || 0,
+      exp_current: exp_current || 0,
+      exp_total: exp_total || 0,
+      gas_current: gas_current || 0,
+      gas_total: gas_total || 0,
+      defense_against_biochemical_zombies_boost: defense_against_biochemical_zombies_boost || 0,
+      enemy_melee_attack_reduction: enemy_melee_attack_reduction || 0,
+      enemy_mid_range_attack_reduction: enemy_mid_range_attack_reduction || 0,
+      enemy_long_range_attack_reduction: enemy_long_range_attack_reduction || 0,
+      enemy_biochemical_zombie_attack_reduction: enemy_biochemical_zombie_attack_reduction || 0,
+      enemy_melee_defense_reduction: enemy_melee_defense_reduction || 0,
+      enemy_mid_range_defense_reduction: enemy_mid_range_defense_reduction || 0,
+      enemy_long_range_defense_reduction: enemy_long_range_defense_reduction || 0,
+      enemy_biochemical_zombie_defense_reduction: enemy_biochemical_zombie_defense_reduction || 0,
+      oil_boost: oil_boost || 0,
+      oil_boost_bonus: oil_boost_bonus || 0,
+      steel_boost: steel_boost || 0,
+      steel_boost_bonus: steel_boost_bonus || 0,
+      mineral_production: mineral_production || 0,
+      mineral_production_bonus: mineral_production_bonus || 0,
+      food_boost: food_boost || 0,
+      food_boost_bonus: food_boost_bonus || 0,
+      food_gather_bonus: food_gather_bonus || 0,
+      oil_gather_bonus: oil_gather_bonus || 0,
+      steel_gather_bonus: steel_gather_bonus || 0,
+      mineral_gather_bonus: mineral_gather_bonus || 0,
+      gold_gather_bonus: gold_gather_bonus || 0,
+      building_speed_additional_bonus: building_speed_additional_bonus || 0,
+      technology_research: technology_research || 0,
+      load_boost: load_boost || 0,
+      monster_attack_speed: monster_attack_speed || 0,
+      mobility_recovery: mobility_recovery || '',
+      healing_speed: healing_speed || 0,
+      increase_max_wounded_units: increase_max_wounded_units || 0,
+      increase_max_wounded_units_bonus: increase_max_wounded_units_bonus || 0,
+      vehicle_queue: vehicle_queue || 0,
+      vehicle_queue_bonus: vehicle_queue_bonus || 0,
+      fleet_troops_units_limit: fleet_troops_units_limit || 0,
+      fleet_troops_units_limit_bonus: fleet_troops_units_limit_bonus || 0,
+      cross_nation_battle_troops_expansion: cross_nation_battle_troops_expansion || 0,
+      fleet_speed: fleet_speed || 0,
+      recruitment_speed_up_stat: recruitment_speed_up_stat || 0,
+      melee_attack: melee_attack || 0,
+      melee_defense: melee_defense || 0,
+      melee_hp: melee_hp || 0,
+      mid_range_attack: mid_range_attack || 0,
+      mid_range_defense: mid_range_defense || 0,
+      mid_range_hp: mid_range_hp || 0,
+      long_range_attack: long_range_attack || 0,
+      long_range_defense: long_range_defense || 0,
+      long_range_hp: long_range_hp || 0,
+      increases_damage_to_long_range_troops: increases_damage_to_long_range_troops || 0,
+      increases_damage_to_mid_range_troops: increases_damage_to_mid_range_troops || 0,
+      increases_damage_to_melee_troops: increases_damage_to_melee_troops || 0,
+      reduces_damage_taken_from_long_range_troops: reduces_damage_taken_from_long_range_troops || 0,
+      reduces_damage_taken_from_mid_range_troops: reduces_damage_taken_from_mid_range_troops || 0,
+      reduces_damage_taken_from_melee_troops: reduces_damage_taken_from_melee_troops || 0,
+      biochemical_zombies_recruit_speed_boost: biochemical_zombies_recruit_speed_boost || 0,
+      biochemical_materials_collection_rate_boost: biochemical_materials_collection_rate_boost || 0,
+      biochemical_zombies_attack_boost: biochemical_zombies_attack_boost || 0,
+      biochemical_zombies_hp_boost: biochemical_zombies_hp_boost || 0,
+      biochemical_zombies_defense_boost: biochemical_zombies_defense_boost || 0,
+      biochemical_materials_collection_boost: biochemical_materials_collection_boost || 0,
+      biochemical_zombies_recruit_limit_boost: biochemical_zombies_recruit_limit_boost || 0,
+      biochemical_zombie_army_limit_boost: biochemical_zombie_army_limit_boost || 0,
+      biochemical_zombies_limit_boost: biochemical_zombies_limit_boost || 0,
+      all_troops_block: all_troops_block || 0,
+      all_troops_block_percentage: all_troops_block_percentage || 0,
+      all_troops_disruptor_resistance: all_troops_disruptor_resistance || 0,
+      all_troops_disruptor_resistance_percentage: all_troops_disruptor_resistance_percentage || 0,
+      all_troops_misfire_resistance: all_troops_misfire_resistance || 0,
+      all_troops_misfire_resistance_percentage: all_troops_misfire_resistance_percentage || 0,
+      cross_nation_battle_melee_attack: cross_nation_battle_melee_attack || 0,
+      cross_nation_battle_melee_defense: cross_nation_battle_melee_defense || 0,
+      cross_nation_battle_melee_hp: cross_nation_battle_melee_hp || 0,
+      cross_nation_battle_mid_range_attack: cross_nation_battle_mid_range_attack || 0,
+      cross_nation_battle_mid_range_defense: cross_nation_battle_mid_range_defense || 0,
+      cross_nation_battle_mid_range_hp: cross_nation_battle_mid_range_hp || 0,
+      cross_nation_battle_long_range_attack: cross_nation_battle_long_range_attack || 0,
+      cross_nation_battle_long_range_defense: cross_nation_battle_long_range_defense || 0,
+      cross_nation_battle_long_range_hp: cross_nation_battle_long_range_hp || 0,
+      cross_nation_battle_biochemical_zombies_attack: cross_nation_battle_biochemical_zombies_attack || 0,
+      cross_nation_battle_biochemical_zombies_defense: cross_nation_battle_biochemical_zombies_defense || 0,
+      cross_nation_battle_biochemical_zombies_hp: cross_nation_battle_biochemical_zombies_hp || 0,
+      attack_against_melee_boost: attack_against_melee_boost || 0,
+      attack_against_mid_range_boost: attack_against_mid_range_boost || 0,
+      attack_against_long_range_boost: attack_against_long_range_boost || 0,
+      attack_against_biochemical_zombies_boost: attack_against_biochemical_zombies_boost || 0,
+      defense_against_melee_boost: defense_against_melee_boost || 0,
+      defense_against_mid_range_boost: defense_against_mid_range_boost || 0,
+      defense_against_long_range_boost: defense_against_long_range_boost || 0,
+    };
+
+    const infoData = {
+      user_id,
+      vip_level: vip_level || 0,
+      user_id_value: user_id_value || 0,
+      nation: nation || 0,
+      power_rank: power_rank || 0,
+      username: username || '',
+    };
+
+    const [resourcesResult, statsResult, infoResult] = await Promise.all([
+      supabase.from("player_resources").upsert(resourcesData),
+      supabase.from("player_stats").upsert(statsData),
+      supabase.from("player_info").upsert(infoData),
+    ]);
+
+    if (resourcesResult.error || statsResult.error || infoResult.error) {
+      throw new Error(
+        resourcesResult.error?.message ||
+        statsResult.error?.message ||
+        infoResult.error?.message ||
+        "Failed to submit data"
+      );
+    }
+
+    return NextResponse.json({ message: "Data submitted successfully" }, { status: 200 });
+  } catch (error: any) {
+    console.error("Error submitting data:", error);
+    return NextResponse.json({ error: error.message || "Failed to submit data" }, { status: 500 });
   }
 }

@@ -19,7 +19,6 @@ export default function Header() {
           </Link>
           {user ? (
             <>
-              <span className="text-sm text-light-text">Welcome, {user.email}</span>
               <button
                 onClick={logout}
                 className="text-light-text hover:text-accent-cyan transition-colors"
